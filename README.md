@@ -1,5 +1,5 @@
 ## OpenKM with KEA
-Last Updated: June 21, 2019
+Last Updated: September 12, 2023
 
 This is an unofficial container that provides the OpenKM application with persistent data. It also provides Tesseract OCR support and the KEA and test environments.
 
@@ -9,7 +9,7 @@ To quickly pull and run the application, exectute the following:
 
 To add document and account persistency, use the following. Note that you will need to use this command in order for the installation not to re-initializa on every container rebuild or update.
 
-`docker run -p 8080:8080 -v./openkm-data:/opt/tomcat-8.5.34/repository mbagnall/openkm`
+`docker run -p 8080:8080 -v./openkm-data:/opt/tomcat-8.5.69/repository mbagnall/openkm`
 
 ---
 
@@ -44,7 +44,7 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./data:/opt/tomcat-8.5.34/repository
+      - ./data:/opt/tomcat-8.5.69/repository
     depends_on:
       - db
     restart: unless-stopped
@@ -54,7 +54,7 @@ services:
   # start using". If you need a more MySQL environment, be sure to check out
   # the information in the readme about a more secure mysql.
   db:
-    image: mysql:5.7
+    image: mariadb:10.6
     container_name: openkm-datastore
     command: --skip-grant-tables --init-file=/opt/init-file/init-file.sql
     environment:
@@ -84,7 +84,7 @@ Below is an example of the changes required. Note that the passwords must stay t
 
 ```yaml
   db:
-    image: mysql:5.7
+    image: mariadb:10.6
     container_name: openkm-datastore
     environment:
       MYSQL_DATABASE: okmdb

@@ -1,6 +1,16 @@
 version: '2'
 services:
 
+  # Please note this repository is for demonstration and development purposes
+  # only. It is not designed to be an out of the box production service as it
+  # has some security implications that you will really need to know what you
+  # are doing to mitigate. Please refer the OpenKM project page at:
+  #
+  # https://github.com/ElusiveMind/openkm
+  #
+  # Complete details on how to set up and configure a production service is
+  # contained there.
+  #
   # Our base OpenKM service is at the localhost. If hosting these on a domain,
   # change the "localhost:8080" to your domain and optionally change the ports.
   # if you are using ingress as a proxy, then you can make the exposed port anything
@@ -14,17 +24,17 @@ services:
     ports:
       - 8080:8080
     volumes:
-      - ./data:/opt/tomcat-8.5.34/repository
+      - ./data:/opt/tomcat-8.5.69/repository
     depends_on:
       - db
     restart: unless-stopped
-  
+
   # We need to start our MySQL service without grant tables and with an init
   # file to create the user. This allows the magic process of "start service,
   # start using". If you need a more MySQL environment, be sure to check out
   # the information in the readme about a more secure mysql.
   db:
-    image: mysql:5.7
+    image: mariadb:10.6
     container_name: openkm-datastore
     command: --skip-grant-tables --init-file=/opt/init-file/init-file.sql
     environment:
@@ -43,7 +53,7 @@ services:
     image: phpmyadmin/phpmyadmin
     container_name: openkm-phpmyadmin
     ports:
-      - 8081:80
+      - 8085:80
     environment:
       - PMA_HOST=db
     depends_on:
