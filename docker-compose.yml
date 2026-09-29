@@ -1,61 +1,41 @@
-version: '2'
 services:
-
-  # Please note this repository is for demonstration and development purposes
-  # only. It is not designed to be an out of the box production service as it
-  # has some security implications that you will really need to know what you
-  # are doing to mitigate. Please refer the OpenKM project page at:
+  # OPEN_KM_URL is used by KEA, inside the container, to call OpenKM's REST
+  # API, so it always points at the container's own port 8080 and the
+  # installed context path: /openkm for OpenKM 7.0, /OpenKM for OpenKM 6.3.
+  # Leave it out to let the image pick the right one.
   #
-  # https://github.com/ElusiveMind/openkm
-  #
-  # Complete details on how to set up and configure a production service is
-  # contained there.
-  #
-  # Our base OpenKM service is at the localhost. If hosting these on a domain,
-  # change the "localhost:8080" to your domain and optionally change the ports.
-  # if you are using ingress as a proxy, then you can make the exposed port anything
-  # but it must map to 8080 on the container.
+  # OPEN_KM_BASE_URL is the address browsers use to reach OpenKM; KEA allows
+  # it as a CORS origin. When hosting on a domain or behind a proxy, change
+  # this one to that domain. The published port can be anything, but it must
+  # map to port 8080 in the container.
   openkm:
-    image: mbagnall/openkm:mysql
+    image: mbagnall/openkm:7.0.3-mysql
     container_name: openkm
     environment:
-      OPEN_KM_URL: http://localhost:8080/OpenKM
+      OPEN_KM_URL: http://localhost:8080/openkm
       OPEN_KM_BASE_URL: http://localhost:8080
     ports:
       - 8080:8080
     volumes:
-      - ./data:/opt/tomcat-8.5.69/repository
+      - ./data:/opt/tomcat/repository
     depends_on:
       - db
     restart: unless-stopped
 
-  # We need to start our MySQL service without grant tables and with an init
-  # file to create the user. This allows the magic process of "start service,
-  # start using". If you need a more MySQL environment, be sure to check out
-  # the information in the readme about a more secure mysql.
+  # The database name, user and password must match the DATABASE_* values
+  # the image was built with (the defaults are shown here). OpenKM expects a
+  # utf8 / utf8_bin database.
   db:
-    image: mariadb:10.6
+    image: mysql:8.0
     container_name: openkm-datastore
-    command: --skip-grant-tables --init-file=/opt/init-file/init-file.sql
+    command: --character-set-server=utf8mb3 --collation-server=utf8mb3_bin
     environment:
+      MYSQL_DATABASE: okmdb
+      MYSQL_USER: openkm
+      MYSQL_PASSWORD: OpenKM77
       MYSQL_ROOT_PASSWORD: OpenKM77
-      MYSQL_ALLOW_EMPTY_PASSWORD: 0
     expose:
       - 3306
     volumes:
       - ./openkm-datastore:/var/lib/mysql
-      - ./openkm-init-file:/opt/init-file
-    restart: unless-stopped
-
-  # Optional PHPMyAdmin service. Recommended for localhost only. Not secure in
-  # prod with the --skip-grant-tables option in place.
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: openkm-phpmyadmin
-    ports:
-      - 8085:80
-    environment:
-      - PMA_HOST=db
-    depends_on:
-      - db
     restart: unless-stopped
